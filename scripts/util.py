@@ -5,10 +5,11 @@ import pandas            as pd
 import matplotlib.pyplot as plt
 
 # Bookkeeping variables
-DATA_DIRECTORY    = "../data"
-PLOTS_DIRECTORY   = "../plots"
-RESULTS_DIRECTORY = "../results"
-DATA_CSV        = os.path.join(DATA_DIRECTORY, "all_subjects.csv")
+DATA_DIRECTORY          = "../data"
+PLOTS_DIRECTORY         = "../plots"
+RESULTS_DIRECTORY       = "../results"
+DATA_CSV                = os.path.join(DATA_DIRECTORY, "all_subjects.csv")
+QUESTIONNAIRE_DIRECTORY = os.path.join(DATA_DIRECTORY, 'questionnaire')
 
 # Data columns
 COLUMNS = ["trial", "common",
@@ -47,16 +48,20 @@ def get_all_subjects():
     return sorted(get_data(usecols=['Subject'])['Subject'].unique().astype(int).tolist())
 
 def get_story_subjects():
-    return sorted(get_story_data(usecols=['Subject'])['Subject'].unique().astype(int).tolist())
+    return sorted(get_story_data(usecols=['Subject', 'Condition'])['Subject'].unique().astype(int).tolist())
 
 def get_abstract_subjects():
-    return sorted(get_abstract_data(usecols=['Subject'])['Subject'].unique().astype(int).tolist())
+    return sorted(get_abstract_data(usecols=['Subject', 'Condition'])['Subject'].unique().astype(int).tolist())
 
 def get_subject_data(subject, usecols=None):
     data = get_data(usecols=usecols)
     data = data[data.Subject == subject].reset_index(drop=True)
     return data
 
+def get_subject_questionnaire(subject):
+    filepath = os.path.join(QUESTIONNAIRE_DIRECTORY, str(subject).zfill(3) + "_story.txt")
+    if os.path.exists(filepath): return filepath
+    else: return filepath.replace("story", "abstract")
+
 if __name__ == "__main__":
-    subjects = get_all_subjects()
-    print(subjects)
+    get_subject_questionnaire(1)
