@@ -5,8 +5,9 @@ import pandas            as pd
 import matplotlib.pyplot as plt
 
 # Bookkeeping variables
-DATA_DIRECTORY  = "../data"
-PLOTS_DIRECTORY = "../plots"
+DATA_DIRECTORY    = "../data"
+PLOTS_DIRECTORY   = "../plots"
+RESULTS_DIRECTORY = "../results"
 DATA_CSV        = os.path.join(DATA_DIRECTORY, "all_subjects.csv")
 
 # Data columns
@@ -41,6 +42,21 @@ def get_abstract_data(usecols=None):
     data = data[data.Condition == "abstract"]
     return data
 
+### Functions to get subjects
+def get_all_subjects():
+    return sorted(get_data(usecols=['Subject'])['Subject'].unique().astype(int).tolist())
+
+def get_story_subjects():
+    return sorted(get_story_data(usecols=['Subject'])['Subject'].unique().astype(int).tolist())
+
+def get_abstract_subjects():
+    return sorted(get_abstract_data(usecols=['Subject'])['Subject'].unique().astype(int).tolist())
+
+def get_subject_data(subject, usecols=None):
+    data = get_data(usecols=usecols)
+    data = data[data.Subject == subject].reset_index(drop=True)
+    return data
+
 if __name__ == "__main__":
-    data = get_data()
-    print(data)
+    subjects = get_all_subjects()
+    print(subjects)
