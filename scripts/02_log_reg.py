@@ -26,6 +26,10 @@ template = {
 
 def make_log_reg_data(subject):
     data = get_subject_data(subject)
+    # Impute NaN with 1s
+    #! Because that's what they do in the paper
+    data['choice1'] = data['choice1'].fillna(1)
+    data['choice2'] = data['choice2'].fillna(1)
     d    = deepcopy(template)
     for ii in range(1, len(data)):
         prev = data.iloc[ii-1]
@@ -67,7 +71,7 @@ def make_log_reg_data(subject):
         # Dependent variable
         d['stay'].append((curr['choice1'] == prev['choice1']).astype(float))
     d['subject']   = [subject] * len(d['bias'])
-    d['condition'] = ([data.iloc[0]['Condition']] == 'Story') * len(d['bias'])
+    d['condition'] = [float([data.iloc[0]['Condition']][0] == 'story')] * len(d['bias'])
     return pd.DataFrame(d)
 
 def make_data():
@@ -79,6 +83,7 @@ def make_data():
     df.to_csv(os.path.join(DATA_DIRECTORY, 'log_reg_data.csv'), index=False)
 
 if __name__ == "__main__":
+    make_data()
     df = pd.read_csv(os.path.join(DATA_DIRECTORY, 'log_reg_data.csv'))
 
     ## Hierarchical Bayesian Model
@@ -101,17 +106,24 @@ if __name__ == "__main__":
     result = model.fit(reml=False)
     print(result.summary())
     print(f"AIC: {result.aic}")
-    # Saving the results
-    subject_effects = result.random_effects
-    d = {
-        'subject': [],
-        'outcome': [],
-        'outcome_x_transition': [],
-    }
 
-    for subject_id, values in result.random_effects.items():
-        d['subject'].append(subject_id)
-        d['outcome'].append(values[2])
-        d['outcome_x_transition'].append(values[4])
-    df = pd.DataFrame(d)
-    df.to_csv(os.path.join(RESULTS_DIRECTORY, 'log_reg_subject_effects.csv'), index=False)
+    ## Individual condition
+    data = pd.read_csv(os.path.join(DATA_DIRECTORY, 'log_reg_data.csv'))
+    conditions = data['condition'].unique()
+    for condition in conditions:
+        df = data[data['condition'] == condition]
+        model = mixedlm(
+            "stay ~ 1 + outcome + transition + outcome_x_transition",
+            df,
+            groups=df["subject"],
+            re_formula="~ outcome + transition + outcome_x_transition"
+        )
+
+        result = model.fit(reml=False)
+        print(result.summary())
+        print(f"Condition: {condition}")
+        print(f"AIC: {result.aic}")
+        print(f"Log-likelihood: {result.llf}")
+        print(f"BIC: {result.bic}")
+
+

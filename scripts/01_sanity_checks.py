@@ -1,6 +1,6 @@
 # Importing libraries
 from util import *
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, ttest_ind
 
 expr1 = 'Please rate on a 0 to 4 scale how well you understood the game.'
 expr2 = 'Please rate on a 0 to 4 scale how effortful playing the game was.'
@@ -59,3 +59,9 @@ if __name__ == "__main__":
     for each in ['Understanding', 'Effort', 'Complexity']:
         r, p = pearsonr(df[each], df['Reward'])
         print(f"{each} vs Reward: r = {r:.4f}, p = {p:.4f}")
+    story_subids    = get_story_subjects()
+    abstract_subids = get_abstract_subjects()
+    # Compare rewards
+    test = ttest_ind(df[df['Subject'].isin(story_subids)]['Reward'],
+                     df[df['Subject'].isin(abstract_subids)]['Reward'])
+    print(test)
